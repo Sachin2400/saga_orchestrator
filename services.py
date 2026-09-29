@@ -253,6 +253,12 @@ async def dispatch_order(payload: dict) -> dict:
     if cached is not None:
         return cached
 
+    if _should_fail(saga_id, "dispatch", override_key="dispatch"):
+        await asyncio.sleep(_random_latency())
+        msg = "Dispatch service unavailable - could not create shipment"
+        logger.error("dispatch_order FAILED saga_id=%s", saga_id)
+        raise ServiceFailure("dispatch", msg)
+
     await asyncio.sleep(_random_latency())
 
     order_id = payload.get("order_id", "")
